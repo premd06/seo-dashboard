@@ -1,0 +1,1 @@
+{"dependencies":{"cors":"^2.8.5","express":"^4.21.2"},"description":"Express REST API for the SEO & Performance Analytics Dashboard","main":"index.js","name":"seo-dashboard-server","scripts":{"start":"node index.js"},"type":"module","version":"1.0.0"}
