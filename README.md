@@ -1,64 +1,47 @@
-# SEO & Performance Analytics Dashboard
+# seo dashboard for davehomes.ca
 
-A full-stack dashboard that tracks the traffic-readiness, SEO health, and
-performance of a live production website — [davehomes.ca](https://davehomes.ca).
+I built this to keep an eye on my website (davehomes.ca) — how fast it loads, whether the SEO basics are in place, stuff like that. It was also my first project with a real frontend and backend, which was honestly the main point.
 
-## Architecture
+## how it works
 
-```
-Python collector ──► SQLite ──► Node/Express REST API ──► React dashboard
-(collect.py)        (data/)     (server/)                 (client/)
-```
+python script collects the data → stores it in sqlite → node/express api serves it → react page shows it
 
-- **collector/** — Python 3 script that pulls metrics from external APIs and
-  a live site audit, then stores timestamped snapshots in SQLite so trends
-  build over time.
-- **server/** — Node.js + Express REST API that reads the database and can
-  trigger a fresh collection run.
-- **client/** — React (Vite) dashboard with score cards, Core Web Vitals,
-  an on-page SEO checklist, and trend charts (Recharts).
+- **collector/** — python script. Calls the Google PageSpeed Insights API for scores and Core Web Vitals (mobile + desktop), and also audits the live site itself: status, response time, title/meta tags, sitemap, robots.txt. Everything gets saved with a timestamp so changes show up over time.
+- **server/** — the express api. Reads the database, and can kick off a new collection run.
+- **client/** — react dashboard (vite + recharts). Score cards, a Core Web Vitals table, an on-page SEO checklist, and a chart of scores over time.
 
-## Data sources
+## what you need
 
-- **Google PageSpeed Insights API** — Lighthouse performance / SEO /
-  accessibility / best-practices scores and Core Web Vitals (LCP, CLS, INP,
-  FCP, TTFB, TBT) for mobile and desktop. Requires a free API key
-  (`PAGESPEED_API_KEY` env var; free tier allows 25,000 queries/day).
-- **Live site audit** — HTTP status, response time, page weight, and on-page
-  SEO signals: title, meta description, Open Graph image, canonical URL,
-  H1 count, sitemap.xml and robots.txt presence.
+A Google PageSpeed API key (free). Without one you get rate-limited pretty quick. The collector reads it from an env var called `PAGESPEED_API_KEY`.
 
-## Run it
+## run it
 
 ```bash
-# 1. Collect data (Python)
+# 1. collect some data
 cd collector
 python3 -m venv venv && ./venv/bin/pip install requests
 PAGESPEED_API_KEY=<your-key> ./venv/bin/python collect.py
 
-# 2. Start the API (Node)
+# 2. start the api
 cd ../server
 npm install
 npm start                 # http://localhost:3001
 
-# 3. Start the dashboard (React)
+# 3. start the dashboard
 cd ../client
 npm install
 npm run dev               # http://localhost:5173
 ```
 
-## API endpoints
+## api endpoints
 
-| Method | Endpoint       | Description                                  |
-| ------ | -------------- | -------------------------------------------- |
-| GET    | /api/health    | Service + database status                    |
-| GET    | /api/overview  | Latest snapshot (scores + audit)             |
-| GET    | /api/history   | All runs, for trend charts                   |
-| POST   | /api/collect   | Trigger the Python collector                 |
+- `GET /api/health` — server + database status
+- `GET /api/overview` — latest scores and audit
+- `GET /api/history` — every run (this feeds the trend chart)
+- `POST /api/collect` — run the collector again
 
-## Roadmap
+## still to do
 
-- Google Search Console API integration (clicks, impressions, CTR, average
-  position, top queries) via OAuth.
-- Scheduled automatic collections (cron) for hands-off trend tracking.
-- Score-drop alerts when performance regresses.
+- Google Search Console data (clicks, impressions, average position) — that one needs OAuth, haven't set it up yet
+- run the collector on a schedule so the trend chart fills in on its own
+- alert me somehow if the performance score tanks
